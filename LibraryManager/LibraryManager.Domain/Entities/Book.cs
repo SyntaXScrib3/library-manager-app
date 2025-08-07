@@ -1,23 +1,29 @@
-﻿
-namespace LibraryManager.Domain.Entities;
+﻿namespace LibraryManager.Domain.Entities;
 public class Book
 {
-    public int Id { get; }
-    public string Title { get; } = string.Empty;
-    public string Author { get; } = string.Empty;
-    public string Year { get; } = string.Empty;
+    public Guid Id { get; }
+    public string Title { get; }
+    public string Author { get; }
+    public int Year { get; }
 
-
-    public Book(string title, string author, string year)
+    public Book(string title, string author, int year)
     {
-        Id = GenerateId();
+        Id = Guid.NewGuid();
         Title = title;
         Author = author;
         Year = year;
     }
 
-    private int GenerateId()
+    public override bool Equals(object obj)
     {
         throw new NotImplementedException();
+        //if (obj is not Book other) return false;
+        //return Id == other.Id;
+    }
+
+    public override int GetHashCode()
+    {
+        throw new NotImplementedException();
+        //return Id.GetHashCode();
     }
 }

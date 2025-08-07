@@ -1,22 +1,35 @@
-﻿using System.Net;
-
-namespace LibraryManager.Domain.Entities;
+﻿namespace LibraryManager.Domain.Entities;
 
 public class BookInventory
 {
-    public int Id { get; }
-    public int BookId { get; }
-    public int AvailableQuantity { get; }
+    public Book Book { get; }
+    public int TotalCopies { get; set; }
+    public int BorrowedCopies { get; set; }
 
-    public BookInventory(int bookId, int availableQuantity)
+    public BookInventory(Book book, int totalCopies)
     {
-        Id = GenerateId();
-        BookId = bookId;
-        AvailableQuantity = availableQuantity;
+        Book = book ?? throw new ArgumentNullException(nameof(book));
+
+        if (totalCopies < 1)
+            throw new ArgumentException("There must be at least 1 copy.", nameof(totalCopies));
+
+        TotalCopies = totalCopies;
+        BorrowedCopies = 0;
     }
 
-    private int GenerateId()
+    public int AvailableCopies => TotalCopies - BorrowedCopies;
+    public bool IsAvailable => AvailableCopies > 0;
+    public void BorrowCopy()
     {
-        throw new NotImplementedException();
+        if (AvailableCopies <= 0)
+            throw new InvalidOperationException("No available copies.");
+        BorrowedCopies++;
+    }
+
+    public void ReturnCopy()
+    {
+        if (BorrowedCopies <= 0)
+            throw new InvalidOperationException("No borrowed copies to return.");
+        BorrowedCopies--;
     }
 }

@@ -2,25 +2,28 @@
 
 public class User
 {
-    public int Id { get; }
-    public string PersonalId { get; } = string.Empty;
-    public string FirstName { get; } = string.Empty;
-    public string LastName { get; } = string.Empty;
-    public DateTime BirthDate { get; }
+    public Guid Id { get; }
+    public string PersonalId { get; }
+    public string FirstName { get; }
+    public string LastName { get; }
+    public DateTime Birthdate { get; }
 
-    public User(string personalId, string firstName, string lastName, DateTime birthDate)
+    public HashSet<Book> BorrowedBooks { get; }
+
+    public User(string firstName, string lastName, DateTime birthdate, string personalId)
     {
-        Id = GenerateID();
-        PersonalId = personalId;
+        Id = Guid.NewGuid();
         FirstName = firstName;
         LastName = lastName;
-        BirthDate = birthDate;
+        Birthdate = birthdate;
+        PersonalId = personalId;
+        BorrowedBooks = new HashSet<Book>();
     }
 
-    //Todo
-    private int GenerateID()
-    {
-        throw new NotImplementedException();
-    }
+    public bool HasBook(Book book) => BorrowedBooks.Contains(book);
 
+    public void BorrowBook(Book book) => BorrowedBooks.Add(book);
+
+    public void ReturnBook(Book book) => BorrowedBooks.Remove(book);
 }
+

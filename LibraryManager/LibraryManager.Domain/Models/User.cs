@@ -8,7 +8,8 @@ public class User
     public string LastName { get; }
     public DateTime Birthdate { get; }
 
-    public HashSet<Book> BorrowedBooks { get; }
+    private readonly List<Loan> _loans = new();
+    public IReadOnlyList<Loan> Loans => _loans;
 
     public User(string firstName, string lastName, DateTime birthdate, string personalId)
     {
@@ -17,13 +18,20 @@ public class User
         LastName = lastName;
         Birthdate = birthdate;
         PersonalId = personalId;
-        BorrowedBooks = new HashSet<Book>();
     }
 
-    public bool HasBook(Book book) => BorrowedBooks.Contains(book);
+    public Loan? GetLoanFor(Book book) => _loans.FirstOrDefault(loan => loan.Book.Equals(book));
 
-    public void BorrowBook(Book book) => BorrowedBooks.Add(book);
+    public bool HasBook(Book book) => _loans.Any(loan => loan.Book.Equals(book));
 
-    public void ReturnBook(Book book) => BorrowedBooks.Remove(book);
+    public void BorrowBook(Book book, DateTime dueDate)
+    {
+        throw new NotImplementedException();
+    }
+
+    public void ReturnBook(Book book)
+    {
+        throw new NotImplementedException();
+    }
 }
 

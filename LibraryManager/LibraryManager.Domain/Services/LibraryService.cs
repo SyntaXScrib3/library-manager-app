@@ -4,12 +4,12 @@ namespace LibraryManager.Domain.Services;
 public class LibraryService
 {
     private List<User> _users;
-    private Dictionary<Guid, BookInventory> _inventory;
+    private Dictionary<Guid, BookStock> _inventory;
 
     public LibraryService()
     {
         _users = new List<User>();
-        _inventory = new Dictionary<Guid, BookInventory>();
+        _inventory = new Dictionary<Guid, BookStock>();
     }
 
     // USER METHODS
@@ -40,7 +40,7 @@ public class LibraryService
         throw new NotImplementedException();
     }
 
-    public IEnumerable<BookInventory> SearchBooks(string? title = null, string? author = null, int? year = null)
+    public IEnumerable<BookStock> SearchBooks(string? title = null, string? author = null, int? year = null)
     {
         throw new NotImplementedException();
     }
@@ -50,7 +50,7 @@ public class LibraryService
       Enter year:   1937
      */
 
-    public BookInventory? GetBookInventory(Guid bookId)
+    public BookStock? GetBookInventory(Guid bookId)
     {
         throw new NotImplementedException();
     }

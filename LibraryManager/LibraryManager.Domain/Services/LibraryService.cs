@@ -13,19 +13,43 @@ public class LibraryService
     }
 
     // USER METHODS
-    public User GetOrAddUser(string firstName, string lastName, string personalId)
+    public User GetOrAddUser(string firstName, string lastName, string personalId, DateTime birthDate)
     {
-        throw new NotImplementedException();
+        if(personalId == null)
+            throw new ArgumentNullException(nameof(personalId), "Personal ID cannot be null");
+        if (string.IsNullOrEmpty(firstName))
+            throw new ArgumentException("First name cannot be null or empty", nameof(firstName));
+        if (string.IsNullOrEmpty(lastName))
+            throw new ArgumentException("Last name cannot be null or empty", nameof(lastName));
+        if (birthDate == default)
+            throw new ArgumentException("Birth date cannot be default value", nameof(birthDate));
+
+        foreach (var user in _users)
+        {
+            if (user.PersonalId == personalId)
+                return user;
+        }
+        var newUser = new User(firstName, lastName, birthDate, personalId);
+        _users.Add(newUser);
+        return newUser;
     }
 
-    public List<User> GetAllUsers()
+    public IReadOnlyList<User> GetAllUsers()
     {
-        throw new NotImplementedException();
+        return _users.AsReadOnly();
     }
 
     public bool RemoveUser(Guid userId)
     {
-        throw new NotImplementedException();
+        for (int i = 0; i < _users.Count; i++)
+        {
+            if (_users[i].Id == userId)
+            {
+                _users.RemoveAt(i);
+                return true;
+            }
+        }
+        return false;
     }
 
 

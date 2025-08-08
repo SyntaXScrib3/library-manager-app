@@ -1,12 +1,12 @@
 ﻿namespace LibraryManager.Domain.Entities;
 
-public class BookInventory
+public class BookStock
 {
     public Book Book { get; }
     public int TotalCopies { get; set; }
     public int BorrowedCopies { get; set; }
 
-    public BookInventory(Book book, int totalCopies)
+    public BookStock(Book book, int totalCopies)
     {
         Book = book ?? throw new ArgumentNullException(nameof(book));
 

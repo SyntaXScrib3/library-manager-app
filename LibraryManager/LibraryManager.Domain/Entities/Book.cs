@@ -1,5 +1,6 @@
 ﻿namespace LibraryManager.Domain.Entities;
-public class Book
+
+public class Book : IComparable<Book>
 {
     public Guid Id { get; }
     public string Title { get; }
@@ -25,5 +26,10 @@ public class Book
     {
         throw new NotImplementedException();
         //return Id.GetHashCode();
+    }
+
+    public int CompareTo(Book? other)
+    {
+        throw new NotImplementedException();
     }
 }

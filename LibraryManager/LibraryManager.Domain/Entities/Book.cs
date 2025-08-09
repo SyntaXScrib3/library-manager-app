@@ -15,7 +15,12 @@ public class Book : IComparable<Book>
         Year = year;
     }
 
-    public override bool Equals(object obj)
+    public override string ToString()
+    {
+        return $"ID: {Id}, Title: {Title}, Author: {Author}, Year: {Year}";
+    }
+
+    public override bool Equals(object? obj)
     {
         throw new NotImplementedException();
         //if (obj is not Book other) return false;

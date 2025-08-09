@@ -28,21 +28,33 @@ public class LibraryService
         throw new NotImplementedException();
     }
 
-
     // BOOK METHODS
-    public Guid AddBook(string title, string author, int year, int totalCopies)
+    public Guid AddBook(string title, string author, int year, int totalCopies) => AddBook(new Book(title, author, year), totalCopies);
+
+    public Guid AddBook(Book book, int totalCopies)
     {
-        throw new NotImplementedException();
+        if (_inventory.ContainsKey(book.Id)) throw new ArgumentException($"The book with the ID: {book.Id}, is already in the inventory");
+
+        _inventory[book.Id] = new BookInventory(book, totalCopies);
+        return book.Id;
     }
 
     public bool RemoveBook(Guid bookId)
     {
-        throw new NotImplementedException();
+        if (!_inventory.ContainsKey(bookId)) throw new ArgumentException($"The book with the ID: {bookId}, is not in the inventory");
+
+        return _inventory.Remove(bookId);
     }
 
-    public IEnumerable<BookInventory> SearchBooks(string? title = null, string? author = null, int? year = null)
+    public IEnumerable<BookInventory> SearchBooks(string? title = null, string? author = null, string? year = null)
     {
-        throw new NotImplementedException();
+        foreach (var item in _inventory)
+        {
+            if (CheckIfBookMatchesTheCondition(item.Value.Book, title, author, year))
+            {
+                yield return item.Value;
+            }
+        }
     }
     /*
       Enter title:  hobbit
@@ -65,10 +77,12 @@ public class LibraryService
     {
         throw new NotImplementedException();
     }
+
     public void Save(string filePath)
     {
         throw new NotImplementedException();
     }
+
     public void Save(Stream stream)
     {
         throw new NotImplementedException();
@@ -78,8 +92,21 @@ public class LibraryService
     {
         throw new NotImplementedException();
     }
+
     public void Load(Stream stream)
     {
         throw new NotImplementedException();
+    }
+    
+    private bool CheckIfBookMatchesTheCondition(Book book, string? title, string? author, string? year)
+    {
+        if ((!string.IsNullOrEmpty(author) && !book.Author.Contains(author, StringComparison.CurrentCultureIgnoreCase)) ||
+            (!string.IsNullOrEmpty(title) && !book.Title.Contains(title, StringComparison.CurrentCultureIgnoreCase)) ||
+            (!string.IsNullOrEmpty(year) && book.Year != int.Parse(year)))
+        {
+            return false;
+        }
+
+        return true;
     }
 }

@@ -4,12 +4,12 @@ namespace LibraryManager.Domain.Services;
 public class LibraryService
 {
     private List<User> _users;
-    private Dictionary<Guid, BookInventory> _inventory;
+    private Dictionary<Guid, BookStock> _inventory;
 
     public LibraryService()
     {
         _users = new List<User>();
-        _inventory = new Dictionary<Guid, BookInventory>();
+        _inventory = new Dictionary<Guid, BookStock>();
     }
 
     // USER METHODS
@@ -35,7 +35,7 @@ public class LibraryService
     {
         if (_inventory.ContainsKey(book.Id)) throw new ArgumentException($"The book with the ID: {book.Id}, is already in the inventory");
 
-        _inventory[book.Id] = new BookInventory(book, totalCopies);
+        _inventory[book.Id] = new BookStock(book, totalCopies);
         return book.Id;
     }
 
@@ -46,7 +46,7 @@ public class LibraryService
         return _inventory.Remove(bookId);
     }
 
-    public IEnumerable<BookInventory> SearchBooks(string? title = null, string? author = null, string? year = null)
+    public IEnumerable<BookStock> SearchBooks(string? title = null, string? author = null, string? year = null)
     {
         foreach (var item in _inventory)
         {
@@ -62,7 +62,7 @@ public class LibraryService
       Enter year:   1937
      */
 
-    public BookInventory? GetBookInventory(Guid bookId)
+    public BookStock? GetBookInventory(Guid bookId)
     {
         throw new NotImplementedException();
     }

@@ -7,9 +7,9 @@ public class Book : IComparable<Book>
     public string Author { get; }
     public int Year { get; }
 
-    public Book(string title, string author, int year)
+    public Book(string title, string author, int year, Guid? id = null)
     {
-        Id = Guid.NewGuid();
+        Id = id ?? Guid.NewGuid();
         Title = title;
         Author = author;
         Year = year;

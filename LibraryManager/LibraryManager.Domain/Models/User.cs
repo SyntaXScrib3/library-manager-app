@@ -11,14 +11,34 @@ public class User
     private readonly List<Loan> _loans = new();
     public IReadOnlyList<Loan> Loans => _loans;
 
-    public User(string firstName, string lastName, DateTime birthdate, string personalId)
+    internal void AddLoan(Loan loan)
     {
-        Id = Guid.NewGuid();
+        if (loan == null)
+            throw new ArgumentNullException(nameof(loan), "Loan cannot be null.");
+        _loans.Add(loan);
+    }
+
+    //public User(Guid? id = null)
+    //{
+    //    Id = id ?? Guid.NewGuid();
+    //}
+
+    //public User(Guid? id, string firstName, string lastName, DateTime birthdate, string personalId) : this(id)
+    //{
+    //    FirstName = firstName;
+    //    LastName = lastName;
+    //    Birthdate = birthdate;
+    //    PersonalId = personalId;
+    //}
+    public User(string firstName, string lastName, DateTime birthdate, string personalId, Guid? id = null)
+    {
+        Id = id ?? Guid.NewGuid();
         FirstName = firstName;
         LastName = lastName;
         Birthdate = birthdate;
         PersonalId = personalId;
     }
+
 
     public Loan? GetLoanFor(Book book) => _loans.FirstOrDefault(loan => loan.Book.Equals(book));
 

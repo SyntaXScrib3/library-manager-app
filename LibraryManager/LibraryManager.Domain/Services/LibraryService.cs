@@ -1,15 +1,16 @@
 ﻿using LibraryManager.Domain.Entities;
+using System.Text;
 namespace LibraryManager.Domain.Services;
 
 public class LibraryService
 {
     private List<User> _users;
-    private Dictionary<Guid, BookInventory> _inventory;
+    private Dictionary<Guid, BookStock> _books;
 
     public LibraryService()
     {
         _users = new List<User>();
-        _inventory = new Dictionary<Guid, BookInventory>();
+        _books = new Dictionary<Guid, BookStock>();
     }
 
     // USER METHODS
@@ -40,7 +41,7 @@ public class LibraryService
         throw new NotImplementedException();
     }
 
-    public IEnumerable<BookInventory> SearchBooks(string? title = null, string? author = null, int? year = null)
+    public IEnumerable<BookStock> SearchBooks(string? title = null, string? author = null, int? year = null)
     {
         throw new NotImplementedException();
     }
@@ -50,7 +51,7 @@ public class LibraryService
       Enter year:   1937
      */
 
-    public BookInventory? GetBookInventory(Guid bookId)
+    public BookStock? GetBookInventory(Guid bookId)
     {
         throw new NotImplementedException();
     }
@@ -69,83 +70,156 @@ public class LibraryService
     public void Save(string filePath)
     {
         ValidatePath(filePath);
-        using (StreamWriter writer = new StreamWriter(filePath))
+        string userSavePath = Path.Combine(filePath, "/users.txt");
+        string bookSavePath = Path.Combine(filePath, "/books.txt");
+
+        using Stream userStream = new FileStream(userSavePath, FileMode.OpenOrCreate, FileAccess.Write);
+        using Stream bookStream = new FileStream(bookSavePath, FileMode.OpenOrCreate, FileAccess.Write);
+
+        Save(userStream, bookStream);
+    }
+    public void Save(Stream userStream, Stream bookStream)
+    {
+        using BinaryWriter userWiter = new BinaryWriter(userStream, Encoding.UTF8, leaveOpen: true);
+        using BinaryWriter bookWriter = new BinaryWriter(bookStream, Encoding.UTF8, leaveOpen: true);
+
+        SaveBooks(bookWriter);
+        SaveUsers(userWiter);
+    }
+    private void SaveBooks(BinaryWriter writer)
+    {
+        writer.Write(_books.Count);
+        foreach (var stock in _books.Values)
         {
-            Save(writer);
+            var book = stock.Book;
+
+            writer.Write(book.Id.ToByteArray());
+            writer.Write(book.Title);
+            writer.Write(book.Author);
+            writer.Write(book.Year);
+            writer.Write(stock.TotalCopies);
+            writer.Write(stock.BorrowedCopies);
         }
     }
-    public void Save(StreamWriter writer)
+    private void SaveUsers(BinaryWriter writer)
     {
-        foreach (var user in _users.Values)
+        writer.Write(_users.Count);
+
+        foreach (var user in _users)
         {
-            writer.WriteLine($"{user.Id} {user.FirstName} {user.LastName} {user.PersonalId} {user.Birthdate}");
-            foreach (var book in user.BorrowedBooks)
+            writer.Write(user.Id.ToByteArray());
+            writer.Write(user.PersonalId);
+            writer.Write(user.FirstName);
+            writer.Write(user.LastName);
+            writer.Write(user.Birthdate.ToBinary());
+
+            writer.Write(user.Loans.Count);
+            foreach (var loan in user.Loans)
             {
-                writer.WriteLine($"{book.Id} {book.Title} {book.Author} {book.Year}");
+                writer.Write(loan.Book.Id.ToByteArray());
+                writer.Write(loan.DueDate.ToBinary());
             }
         }
     }
-
-    public List<User> Load(string filePath)
+    public void Load(string filePath)
     {
         ValidatePath(filePath);
-        using (StreamReader reader = new StreamReader(filePath))
+
+        string userSavePath = Path.Combine(filePath, "/users.txt");
+        string bookSavePath = Path.Combine(filePath, "/books.txt");
+        using Stream userStream = new FileStream(userSavePath, FileMode.Open, FileAccess.Read);
+        using Stream bookStream = new FileStream(bookSavePath, FileMode.Open, FileAccess.Read);
+        
+        Load(userStream, bookStream);
+    }
+    public void Load(Stream userStream, Stream bookStream)
+    {
+        using BinaryReader userReader = new BinaryReader(userStream, Encoding.UTF8, leaveOpen: true);
+        using BinaryReader bookReader = new BinaryReader(bookStream, Encoding.UTF8, leaveOpen: true);
+
+        BookLoad(bookReader);
+        UserLoad(userReader);
+    }
+
+    private void UserLoad(BinaryReader userReader)
+    {
+        _users.Clear();
+        int userCount = userReader.ReadInt32();
+        for (int i = 0; i < userCount; i++)
         {
-            return Load(reader);
+            var user = new User(
+                firstName: userReader.ReadString(),
+                lastName: userReader.ReadString(),
+                birthdate: DateTime.FromBinary(userReader.ReadInt64()),
+                personalId: userReader.ReadString(),
+                id: new Guid(userReader.ReadBytes(16))
+            );
+
+
+            int loanCount = userReader.ReadInt32();
+            for (int j = 0; j < loanCount; j++)
+            {
+                var book = _books[new Guid(userReader.ReadBytes(16))].Book;
+                var dueDate = DateTime.FromBinary(userReader.ReadInt64());
+                user.AddLoan(new Loan(book, dueDate));
+            }
+
+            _users.Add(user);
         }
     }
-    public List<User> Load(StreamReader reader)
+    private void BookLoad(BinaryReader bookReader)
     {
-        List<User> users = new List<User>();
-        while (!reader.EndOfStream)
+        _books.Clear();
+        int bookCount = bookReader.ReadInt32();
+        for (int i = 0; i < bookCount; i++)
         {
-            var line = reader.ReadLine();
-            if (line != null)
-            {
-                string[] parts = line.Split(' ');
-                Guid userId = Guid.Parse(parts[0]);
-                string firstName = parts[1];
-                string lastName = parts[2];
-                string personalId = parts[3];
-                DateTime birthdate = DateTime.Parse(parts[4]);
+            var book = new Book(
+                title: bookReader.ReadString(),
+                author: bookReader.ReadString(),
+                year: bookReader.ReadInt32(),
+                id: new Guid(bookReader.ReadBytes(16))
+            );
 
-                users.Add(new User(firstName, lastName, birthdate, personalId, userId));
-            }
+            int totalCopies = bookReader.ReadInt32();
+            var stock = new BookStock(book, totalCopies);
+
+            stock.BorrowedCopies = bookReader.ReadInt32();
+            _books[book.Id] = stock;
         }
-        return users;
     }
 
     private static void ValidatePath(string filePath)
     {
-        ArgumentException.ThrowIfNullOrEmpty(filePath, nameof(filePath));
+        ArgumentNullException.ThrowIfNull(filePath, nameof(filePath));
         if (Directory.Exists(filePath))
         {
             throw new ArgumentException("File path must be a file, not a directory.", nameof(filePath));
         }
     }
+
 }
 
-//writer.WriteLine("{0, -3}| {1,-38} | {2,-15} | {3,-10} | {4,-20} | {5,-10}", "", "Id", "Name", "PID", "Birthday", "Borrowed Books");
-//writer.WriteLine(new string('-', 100));
+//stream.WriteLine("{0, -3}| {1,-38} | {2,-15} | {3,-10} | {4,-20} | {5,-10}", "", "Id", "Name", "PID", "Birthday", "Borrowed Books");
+//stream.WriteLine(new string('-', 100));
 
 //int count = 1;
-//foreach (var user in _users.Values)
+//foreach (var stock in _users.Values)
 //{
-//    writer.WriteLine("{0, -3}| {1,-38} | {2,-15} | {3,-10} | {4,-10}",
+//    stream.WriteLine("{0, -3}| {1,-38} | {2,-15} | {3,-10} | {4,-10}",
 //        count,
-//        user.Id,
-//        $"{user.FirstName} {user.LastName}",
-//        user.PersonalId,
-//        user.Birthdate);
+//        stock.Id,
+//        $"{stock.FirstName} {stock.LastName}",
+//        stock.PersonalId,
+//        stock.Birthdate);
 
-//    foreach (var book in user.BorrowedBooks)
+//    foreach (var loan in stock.BorrowedBooks)
 //    {
-//        writer.WriteLine("{0, -3}| {1,-38} | {2,-15} | {3,-10} | {4,-10}",
+//        stream.WriteLine("{0, -3}| {1,-38} | {2,-15} | {3,-10} | {4,-10}",
 //            "",
-//            book.Id,
-//            book.Title,
-//            book.Author,
-//            book.Year);
+//            loan.Id,
+//            loan.Title,
+//            loan.Author,
+//            loan.Year);
 //    }
 
 //    count++;

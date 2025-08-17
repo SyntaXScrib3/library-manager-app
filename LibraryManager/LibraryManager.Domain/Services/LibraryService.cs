@@ -71,6 +71,9 @@ public class LibraryService
         if (!fromUser.HasBook(book))
             return false;
 
+        if(toUser.HasBook(book))
+            return false;
+
         fromUser.ReturnBook(book);
         toUser.BorrowBook(book);
 

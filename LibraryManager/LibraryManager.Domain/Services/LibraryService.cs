@@ -3,16 +3,20 @@ namespace LibraryManager.Domain.Services;
 
 public class LibraryService
 {
+    #region FIELDS
     private List<User> _users;
     private Dictionary<Guid, BookStock> _inventory;
+    #endregion
 
+    #region CONSTRUCTORS
     public LibraryService()
     {
         _users = new List<User>();
         _inventory = new Dictionary<Guid, BookStock>();
     }
+    #endregion
 
-    // USER METHODS
+    #region USER METHODS
     public User GetOrAddUser(string firstName, string lastName, string personalId)
     {
         throw new NotImplementedException();
@@ -27,24 +31,45 @@ public class LibraryService
     {
         throw new NotImplementedException();
     }
+    #endregion
 
-    // BOOK METHODS
-    public Guid AddBook(string title, string author, int year, int totalCopies) => AddBook(new Book(title, author, year), totalCopies);
+    #region BOOK METHODS/SEARCH
+    public Guid AddBook(string title, string author, int year, int quantity)
+            => AddBook(new Book(title, author, year), quantity);
 
-    public Guid AddBook(Book book, int totalCopies)
+    public Guid AddBook(Guid id, string title, string author, int year, int quantity)
+        => AddBook(new Book(id, title, author, year), quantity);
+
+    public Guid AddBook(Book book, int quantity)
     {
-        if (_inventory.ContainsKey(book.Id)) throw new ArgumentException($"The book with the ID: {book.Id}, is already in the inventory");
+        if (_inventory.ContainsKey(book.Id))
+        {
+            BookStock stock = GetBookStock(book.Id)!;
+            stock.AddCopies(quantity);
+        }
+        else
+        {
+            _inventory[book.Id] = new BookStock(book, quantity);
+        }
 
-        _inventory[book.Id] = new BookStock(book, totalCopies);
         return book.Id;
     }
 
-    public bool RemoveBook(Guid bookId)
+    public void RemoveBooks(Guid bookId, int quantity)
     {
-        if (!_inventory.ContainsKey(bookId)) throw new ArgumentException($"The book with the ID: {bookId}, is not in the inventory");
+        if (!_inventory.ContainsKey(bookId))
+            throw new ArgumentException($"The book with the ID: {bookId}, is not in the inventory");
 
-        return _inventory.Remove(bookId);
+        BookStock stock = GetBookStock(bookId)!;
+        stock.RemoveCopies(quantity);
+
+        if (stock.AvailableCopies == 0)
+        {
+            _inventory.Remove(bookId);
+        }
     }
+
+    public void RemoveAllBooks(Guid BookId) => RemoveBooks(BookId, GetBookStock(BookId)!.AvailableCopies);
 
     public IEnumerable<BookStock> SearchBooks(string? title = null, string? author = null, string? year = null)
     {
@@ -56,18 +81,14 @@ public class LibraryService
             }
         }
     }
-    /*
-      Enter title:  hobbit
-      Enter author: tolkien
-      Enter year:   1937
-     */
 
-    public BookStock? GetBookInventory(Guid bookId)
+    public BookStock? GetBookStock(Guid bookId)
     {
         throw new NotImplementedException();
     }
+    #endregion
 
-    // LENDING METHODS
+    #region LENDING METHODS
     public bool BorrowBook(User user, Guid bookId)
     {
         throw new NotImplementedException();
@@ -77,7 +98,9 @@ public class LibraryService
     {
         throw new NotImplementedException();
     }
+    #endregion
 
+    #region SAVE/LOAD METHODS
     public void Save(string filePath)
     {
         throw new NotImplementedException();
@@ -97,7 +120,9 @@ public class LibraryService
     {
         throw new NotImplementedException();
     }
-    
+    #endregion
+
+    #region PRIVATE HELPER METHODS
     private bool CheckIfBookMatchesTheCondition(Book book, string? title, string? author, string? year)
     {
         if ((!string.IsNullOrEmpty(author) && !book.Author.Contains(author, StringComparison.CurrentCultureIgnoreCase)) ||
@@ -109,4 +134,7 @@ public class LibraryService
 
         return true;
     }
+    #endregion
 }
+
+// FUTURE: We can implement a different search which matches the user's input with the first letters of the book field.
